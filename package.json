@@ -1,0 +1,33 @@
+{
+  "dependencies": {
+    "@google/maps": "^1.1.3"
+  },
+  "name": "get-latitude-longitude",
+  "version": "1.0.0",
+  "description": "get latitude and longitude from the address from json file update the the json file and save it",
+  "main": "index.js",
+  "devDependencies": {},
+  "scripts": {
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rashu-pro/get-lat-long.git"
+  },
+  "keywords": [
+    "google",
+    "place",
+    "latitude",
+    "longitude",
+    "extract",
+    "lat-long",
+    "from",
+    "address"
+  ],
+  "author": "rashu",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rashu-pro/get-lat-long/issues"
+  },
+  "homepage": "https://github.com/rashu-pro/get-lat-long#readme"
+}
