@@ -14,16 +14,8 @@ async function getAddress(address, supportingAddressParameter, count) {
     return;
   }
 
-  console.log('address: ', address);
-  console.log('formatted address: ', formattedAddress[0].formatted_address);
-  console.log('----------------');
-  // console.log('formatted address: ', formattedAddress);
   return formattedAddress;
 }
-
-// let supportingAddressParameter = [1949, 'Plano', 'Texas'];
-// getAddress('4700 14th Street', supportingAddressParameter, 0);
-// return;
 
 // Function to geocode addresses and update the array
 function geocodeAddressesAndSaveToJson(data) {
@@ -35,15 +27,9 @@ function geocodeAddressesAndSaveToJson(data) {
     let zipCode = String(school['ZIP_CODE']);
     if(zipCode.length<5){
       zipCode = '0'+zipCode;
-      // zipCode = parseInt(zipCode);
-      console.log(zipCode);
-      console.log('============');
     }
     const addressParameter = [zipCode, school['CITY'], school['STATE']];
     const response = await getAddress(school['SCHOOL_ADDRESS'], addressParameter, 0);
-
-    // console.log('address: ', response[0].address_components);
-    // console.log(response[0].formatted_address);
 
     if (response && response[0]) {
       // Update latitude and longitude in the original data
@@ -93,17 +79,44 @@ function saveToJsonFile(data, fileName) {
 }
 
 // Call the function to start geocoding and saving to JSON
-fs.readFile('isla-school-directory.json', 'utf8', (err, data) => {
-  if (err) {
-    console.error('Error reading the input JSON file:', err);
-    return;
-  }
+function formatTheAddress(){
+  fs.readFile('isla-school-directory.json', 'utf8', (err, data) => {
+    if (err) {
+      console.error('Error reading the input JSON file:', err);
+      return;
+    }
 
-  try {
-    const schoolDirectoryData = JSON.parse(data);
-    geocodeAddressesAndSaveToJson(schoolDirectoryData);
+    try {
+      const schoolDirectoryData = JSON.parse(data);
+      geocodeAddressesAndSaveToJson(schoolDirectoryData);
+    } catch {
 
-  } catch {
+    }
+  });
+}
+formatTheAddress();
 
-  }
-});
+
+// Swaping grade brackets value into zip code so that I can show it into popup template into school directory
+function swapData(){
+  fs.readFile('islamic-school-directory-data-updated.json', 'utf8', (err, data) => {
+    if (err) {
+      console.error('Error reading the input JSON file:', err);
+      return;
+    }
+
+    try {
+      const schoolDirectoryData = JSON.parse(data);
+
+      schoolDirectoryData.map(school => {
+        school['ZIP_CODE'] = school['GRADE_BRACKETS'];
+      })
+      saveToJsonFile(schoolDirectoryData, 'islamic-school-directory-swaped-data.json');
+    } catch {
+
+    }
+  });
+}
+// swapData();
+
+
