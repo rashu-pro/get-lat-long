@@ -25,8 +25,8 @@ function geocodeAddressesAndSaveToJson(data) {
     // Geocode the address
     // const response = await geocodeAddress(address);
     let zipCode = String(school['ZIP_CODE']);
-    if(zipCode.length<5){
-      zipCode = '0'+zipCode;
+    if (zipCode.length < 5) {
+      zipCode = '0' + zipCode;
     }
     const addressParameter = [zipCode, school['CITY'], school['STATE']];
     const response = await getAddress(school['SCHOOL_ADDRESS'], addressParameter, 0);
@@ -79,7 +79,7 @@ function saveToJsonFile(data, fileName) {
 }
 
 // Call the function to start geocoding and saving to JSON
-function formatTheAddress(){
+function formatTheAddress() {
   fs.readFile('isla-school-directory.json', 'utf8', (err, data) => {
     if (err) {
       console.error('Error reading the input JSON file:', err);
@@ -94,11 +94,11 @@ function formatTheAddress(){
     }
   });
 }
-formatTheAddress();
+// formatTheAddress();
 
 
-// Swaping grade brackets value into zip code so that I can show it into popup template into school directory
-function swapData(){
+// Swaps grade brackets value into zip code so that I can show it into popup template into school directory
+function swapData() {
   fs.readFile('islamic-school-directory-data-updated.json', 'utf8', (err, data) => {
     if (err) {
       console.error('Error reading the input JSON file:', err);
@@ -118,5 +118,169 @@ function swapData(){
   });
 }
 // swapData();
+
+// Fixes object id duplicate entry
+function objecIdDupicateEntryFixes() {
+  fs.readFile('islamic-school-directory-swaped-data.json', 'utf8', (err, data) => {
+    if (err) {
+      console.error('Error reading the input JSON file:', err);
+      return;
+    }
+
+    try {
+      const schoolDirectoryData = JSON.parse(data);
+
+      let counter = 1;
+      schoolDirectoryData.map(school => {
+        school['OBJECTID'] = counter;
+        school['FID'] = counter;
+        counter++;
+      })
+      console.log('total schools: ', schoolDirectoryData.length)
+
+      saveToJsonFile(schoolDirectoryData, 'islamic-school-directory-swaped-data.json');
+    } catch {
+
+    }
+  });
+}
+// objecIdDupicateEntryFixes();
+
+// Check the object which don't have latitude
+function haveLatitude(fileName) {
+  fs.readFile(fileName, 'utf8', (err, data) => {
+    if (err) {
+      console.error('Error reading the input JSON file:', err);
+      return;
+    }
+
+    try {
+      const schoolDirectoryData = JSON.parse(data);
+      const inCompletedObjectIds = [];
+
+      let counter = 1;
+      schoolDirectoryData.map(school => {
+        if (!school['LATITUDE']) {
+          inCompletedObjectIds.push(school['OBJECTID'])
+        }
+      })
+      console.log('incompleted objects: ', inCompletedObjectIds)
+
+      // saveToJsonFile(schoolDirectoryData, fileName);
+    } catch {
+
+    }
+  });
+}
+// haveLatitude('islamic-school-directory-data-updated.json');
+
+// Purify phone number (only keep one phone number)
+function phoneNumberPurify(fileName) {
+  fs.readFile(fileName, 'utf8', (err, data) => {
+    if (err) {
+      console.error('Error reading the input JSON file:', err);
+      return;
+    }
+
+    try {
+      let schoolDirectoryData = JSON.parse(data);
+
+      schoolDirectoryData = schoolDirectoryData.map(item => {
+        const firstPhoneNumber = item.PHONE.split('\n')[0];
+        const firstEmail = item.EMAIL_ADDRESS.split('\n')[0];
+        const firstHeadOfSchool = item.HEAD_OF_SCHOOL.split('\n')[0];
+
+        return {
+          ...item,
+          PHONE: firstPhoneNumber,
+          EMAIL_ADDRESS: firstEmail,
+          HEAD_OF_SCHOOL: firstHeadOfSchool
+        };
+      });
+
+      saveToJsonFile(schoolDirectoryData, fileName);
+    } catch {
+
+    }
+  });
+}
+// phoneNumberPurify('islamic-school-directory-data-updated.json');
+// phoneNumberPurify('islamic-school-directory-swaped-data.json');
+
+// Replace invalid webaddress
+function invalidWeaddress(fileName) {
+  fs.readFile(fileName, 'utf8', (err, data) => {
+    if (err) {
+      console.error('Error reading the input JSON file:', err);
+      return;
+    }
+
+    try {
+      let schoolDirectoryData = JSON.parse(data);
+
+      // Iterate through the array and validate the WEBSITE and keep only one email
+      schoolDirectoryData = schoolDirectoryData.map(item => {
+        // Validate and clean the WEBSITE
+        if (item.WEBSITE) {
+          const website = item.WEBSITE.trim(); // Remove leading/trailing whitespace
+          if (isValidWebsite(website)) {
+            item.WEBSITE = website; // Update the cleaned website URL
+          } else {
+            item.WEBSITE = ''; // Set to null if invalid
+          }
+        } else {
+          item.WEBSITE = '';
+        }
+
+        return item;
+      });
+
+      saveToJsonFile(schoolDirectoryData, fileName);
+    } catch {
+
+    }
+  });
+}
+// Function to validate a website URL
+function isValidWebsite(url) {
+  // Regular expression for basic URL validation
+  const urlPattern = /^(https?:\/\/)?([a-zA-Z0-9.-]+(\.[a-zA-Z]{2,})+)(\/[a-zA-Z0-9._-]*)*\/?$/;
+  return urlPattern.test(url);
+}
+
+// invalidWeaddress('islamic-school-directory-data-updated.json');
+// invalidWeaddress('islamic-school-directory-swaped-data.json');
+
+
+// Replace '\n' from features with ','
+function replaceSlashNWithCommaInFeatures(fileName) {
+  fs.readFile(fileName, 'utf8', (err, data) => {
+    if (err) {
+      console.error('Error reading the input JSON file:', err);
+      return;
+    }
+
+    try {
+      let schoolDirectoryData = JSON.parse(data);
+
+      // Iterate through the array and replace '\n' with ','
+      schoolDirectoryData = schoolDirectoryData.map(item => {
+        if (item.FEATURES) {
+          item.FEATURES = item.FEATURES.replace(/\n/g, ',');
+        }
+        return item;
+      });
+
+      saveToJsonFile(schoolDirectoryData, fileName);
+    } catch {
+
+    }
+  });
+}
+
+replaceSlashNWithCommaInFeatures('islamic-school-directory-data-updated.json');
+replaceSlashNWithCommaInFeatures('islamic-school-directory-swaped-data.json');
+
+
 
 
