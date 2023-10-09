@@ -310,8 +310,42 @@ function replacTrailingCommaFromThePropertyValue(fileName){
   });
 }
 
-replacTrailingCommaFromThePropertyValue(updatedJsonFileName);
-replacTrailingCommaFromThePropertyValue(swapedDataJsonFileName);
+// replacTrailingCommaFromThePropertyValue(updatedJsonFileName);
+// replacTrailingCommaFromThePropertyValue(swapedDataJsonFileName);
+
+// Add N/A if theres no data available for a property of school object
+function replaceNothingWithNA(fileName){
+  fs.readFile(fileName, 'utf8', (err, data) => {
+    if (err) {
+      console.error('Error reading the input JSON file:', err);
+      return;
+    }
+
+    try {
+      let schoolDirectoryData = JSON.parse(data);
+
+      // Add N/A IF THERES NO DATA AVAILABLE
+      schoolDirectoryData = schoolDirectoryData.map(item => {
+        if(item.FACEBOOK === 'N/A') item.FACEBOOK = '';
+        if(item.TWITER === 'N/A') item.TWITER = '';
+        if(item.INSTAGRAM === 'N/A') item.INSTAGRAM = '';
+        if(item.YOUTUBE === 'N/A') item.YOUTUBE = '';
+        if(item.LINKEDIN === 'N/A') item.LINKEDIN = '';
+        if(item.FLICKR === 'N/A') item.FLICKR = '';
+        if(item.SCHOOL_SERVICES_PROGRAMS === 'N/A') item.SCHOOL_SERVICES_PROGRAMS = '';
+
+
+        return item;
+      });
+
+      saveToJsonFile(schoolDirectoryData, fileName);
+    } catch {
+
+    }
+  });
+}
+// replaceNothingWithNA(swapedDataJsonFileName);
+// replaceNothingWithNA(updatedJsonFileName);
 
 
 
