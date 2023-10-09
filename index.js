@@ -1,5 +1,8 @@
 const fs = require('fs'); // Include the Node.js file system module
 
+const updatedJsonFileName = 'islamic-school-directory-data-updated.json';
+const swapedDataJsonFileName = 'islamic-school-directory-swaped-data.json';
+
 const googleMapsClient = require('@google/maps').createClient({
   key: 'AIzaSyCRIIew-eQp2QjI5mRLFOE-qoUnl-qKC38' // Replace with your actual Google Maps API key
 });
@@ -278,8 +281,39 @@ function replaceSlashNWithCommaInFeatures(fileName) {
   });
 }
 
-replaceSlashNWithCommaInFeatures('islamic-school-directory-data-updated.json');
-replaceSlashNWithCommaInFeatures('islamic-school-directory-swaped-data.json');
+// replaceSlashNWithCommaInFeatures('islamic-school-directory-data-updated.json');
+// replaceSlashNWithCommaInFeatures('islamic-school-directory-swaped-data.json');
+
+// Replace trailing ',' from the features property from the school object
+function replacTrailingCommaFromThePropertyValue(fileName){
+  fs.readFile(fileName, 'utf8', (err, data) => {
+    if (err) {
+      console.error('Error reading the input JSON file:', err);
+      return;
+    }
+
+    try {
+      let schoolDirectoryData = JSON.parse(data);
+
+      // Iterate through the array and remove trailing ','
+      schoolDirectoryData = schoolDirectoryData.map(item => {
+        if (item.FEATURES.endsWith(',')) {
+          item.FEATURES = item.FEATURES.slice(0, -1);
+        }
+        return item;
+      });
+
+      saveToJsonFile(schoolDirectoryData, fileName);
+    } catch {
+
+    }
+  });
+}
+
+replacTrailingCommaFromThePropertyValue(updatedJsonFileName);
+replacTrailingCommaFromThePropertyValue(swapedDataJsonFileName);
+
+
 
 
 
