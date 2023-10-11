@@ -347,6 +347,59 @@ function replaceNothingWithNA(fileName){
 // replaceNothingWithNA(swapedDataJsonFileName);
 // replaceNothingWithNA(updatedJsonFileName);
 
+//Check two array to find if there's any matched entry
+function matchTwoList(sheet1, sheet2){
+  fs.readFile(sheet1, 'utf8', (err, data) => {
+    if (err) {
+      console.error('Error reading the input JSON file:', err);
+      return;
+    }
+
+    try {
+      let schoolDirectoryDataSheet1 = JSON.parse(data);
+      let sheet1NameList = [];
+      schoolDirectoryDataSheet1.map(item => {
+        sheet1NameList.push(item.SCHOOL_NAME);
+      })
+      // console.log(sheet1NameList);
+
+      fs.readFile(sheet2, 'utf8', (err, data) => {
+        if (err) {
+          console.error('Error reading the input JSON file:', err);
+          return;
+        }
+
+        try {
+          let schoolDirectoryDataSheet2 = JSON.parse(data);
+          let sheet2NameList = [];
+          schoolDirectoryDataSheet2.map(item => {
+            sheet2NameList.push(item.SCHOOL_NAME);
+          })
+
+          let matchedItem = findMatchingItems(sheet1NameList, sheet2NameList);
+          console.log(matchedItem);
+
+
+
+          // saveToJsonFile(schoolDirectoryData, fileName);
+        } catch {
+
+        }
+      });
+
+
+      // saveToJsonFile(schoolDirectoryData, fileName);
+    } catch {
+
+    }
+  });
+}
+
+function findMatchingItems(arr1, arr2) {
+  return arr1.filter(item => arr2.includes(item));
+}
+matchTwoList('isla-school-directory-sheet1.json', 'islamic-school-directory-data-updated.json');
+
 
 
 
