@@ -398,10 +398,46 @@ function matchTwoList(sheet1, sheet2){
 function findMatchingItems(arr1, arr2) {
   return arr1.filter(item => arr2.includes(item));
 }
-matchTwoList('isla-school-directory-sheet1.json', 'islamic-school-directory-data-updated.json');
+// matchTwoList('isla-school-directory-sheet1.json', 'islamic-school-directory-data-updated.json');
 
+// Get the duplicates item
+function duplicateItems(fileName){
+  fs.readFile(fileName, 'utf8', (err, data) => {
+    if (err) {
+      console.error('Error reading the input JSON file:', err);
+      return;
+    }
 
+    try {
+      let schoolDirectoryData = JSON.parse(data);
+      let itemArray = [];
+      schoolDirectoryData.map(item => {
+        itemArray.push(item.LATITUDE);
+      })
+      const duplicatesZipCode = findDuplicates(itemArray);
+      console.log(duplicatesZipCode);
+    } catch {
 
+    }
+  });
+}
 
+function findDuplicates(arr) {
+  const duplicates = [];
+  const uniqueValues = [];
 
+  for (let i = 0; i < arr.length; i++) {
+      const value = arr[i];
 
+      if (uniqueValues.includes(value)) {
+          if (!duplicates.includes(value)) {
+              duplicates.push(value);
+          }
+      } else {
+          uniqueValues.push(value);
+      }
+  }
+
+  return duplicates;
+}
+duplicateItems(updatedJsonFileName);
