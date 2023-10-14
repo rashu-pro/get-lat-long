@@ -48,7 +48,7 @@ function geocodeAddressesAndSaveToJson(data) {
   Promise.all(promises)
     .then((updatedData) => {
       // Save the updated data to a JSON file
-      saveToJsonFile(updatedData, 'islamic-school-directory-data-updated.json');
+      saveToJsonFile(updatedData, 'sheet1-fo-2-updated.json');
     })
     .catch((error) => {
       console.error('Error:', error);
@@ -83,7 +83,7 @@ function saveToJsonFile(data, fileName) {
 
 // Call the function to start geocoding and saving to JSON
 function formatTheAddress() {
-  fs.readFile('isla-school-directory.json', 'utf8', (err, data) => {
+  fs.readFile('sheet1-of-2.json', 'utf8', (err, data) => {
     if (err) {
       console.error('Error reading the input JSON file:', err);
       return;
@@ -102,7 +102,7 @@ function formatTheAddress() {
 
 // Swaps grade brackets value into zip code so that I can show it into popup template into school directory
 function swapData() {
-  fs.readFile('islamic-school-directory-data-updated.json', 'utf8', (err, data) => {
+  fs.readFile('sheet1-fo-2-updated.json', 'utf8', (err, data) => {
     if (err) {
       console.error('Error reading the input JSON file:', err);
       return;
@@ -114,7 +114,7 @@ function swapData() {
       schoolDirectoryData.map(school => {
         school['ZIP_CODE'] = school['GRADE_BRACKETS'];
       })
-      saveToJsonFile(schoolDirectoryData, 'islamic-school-directory-swaped-data.json');
+      saveToJsonFile(schoolDirectoryData, 'sheet1-fo-2-swaped.json');
     } catch {
 
     }
@@ -175,7 +175,7 @@ function haveLatitude(fileName) {
     }
   });
 }
-// haveLatitude('islamic-school-directory-data-updated.json');
+// haveLatitude('sheet1-fo-2-swaped.json');
 
 // Purify phone number (only keep one phone number)
 function phoneNumberPurify(fileName) {
@@ -325,17 +325,36 @@ function replaceNothingWithNA(fileName){
       let schoolDirectoryData = JSON.parse(data);
 
       // Add N/A IF THERES NO DATA AVAILABLE
-      schoolDirectoryData = schoolDirectoryData.map(item => {
-        if(item.FACEBOOK === 'N/A') item.FACEBOOK = '';
-        if(item.TWITER === 'N/A') item.TWITER = '';
-        if(item.INSTAGRAM === 'N/A') item.INSTAGRAM = '';
-        if(item.YOUTUBE === 'N/A') item.YOUTUBE = '';
-        if(item.LINKEDIN === 'N/A') item.LINKEDIN = '';
-        if(item.FLICKR === 'N/A') item.FLICKR = '';
-        if(item.SCHOOL_SERVICES_PROGRAMS === 'N/A') item.SCHOOL_SERVICES_PROGRAMS = '';
+      schoolDirectoryData.map(item => {
+        // if(item.FACEBOOK === 'N/A') item.FACEBOOK = '';
+        // if(item.TWITER === 'N/A') item.TWITER = '';
+        // if(item.INSTAGRAM === 'N/A') item.INSTAGRAM = '';
+        // if(item.YOUTUBE === 'N/A') item.YOUTUBE = '';
+        // if(item.LINKEDIN === 'N/A') item.LINKEDIN = '';
+        // if(item.FLICKR === 'N/A') item.FLICKR = '';
+        // if(item.SCHOOL_SERVICES_PROGRAMS === 'N/A') item.SCHOOL_SERVICES_PROGRAMS = '';
 
 
-        return item;
+        // return item;
+        if(item.GRADE_BRACKETS === ''){
+          item.GRADE_BRACKETS = "N/A";
+        }
+
+        if(item.HEAD_OF_SCHOOL === ''){
+          item.HEAD_OF_SCHOOL = "N/A";
+        }
+
+        if(item.TUITION_RANGE === ''){
+          item.TUITION_RANGE = "N/A";
+        }
+
+        if(item.HIFDH_PROGRAM === ''){
+          item.HIFDH_PROGRAM = "N/A";
+        }
+
+        if(item.ZIP_CODE === ''){
+          item.ZIP_CODE = "N/A";
+        }
       });
 
       saveToJsonFile(schoolDirectoryData, fileName);
@@ -346,6 +365,8 @@ function replaceNothingWithNA(fileName){
 }
 // replaceNothingWithNA(swapedDataJsonFileName);
 // replaceNothingWithNA(updatedJsonFileName);
+// replaceNothingWithNA('sheet1-fo-2-updated.json');
+replaceNothingWithNA('sheet1-fo-2-swaped.json');
 
 //Check two array to find if there's any matched entry
 function matchTwoList(sheet1, sheet2){
@@ -440,4 +461,54 @@ function findDuplicates(arr) {
 
   return duplicates;
 }
-duplicateItems(updatedJsonFileName);
+// duplicateItems(updatedJsonFileName);
+
+// fix the object id for sheet 1
+function fixObjectId(fileName){
+  fs.readFile(fileName, 'utf8', (err, data) => {
+    if (err) {
+      console.error('Error reading the input JSON file:', err);
+      return;
+    }
+
+    try {
+      let schoolDirectoryData = JSON.parse(data);
+      let startingObject = 215;
+      schoolDirectoryData.map(item => {
+        item.OBJECTID = startingObject;
+        item.FID = startingObject;
+        startingObject++;
+      })
+
+      saveToJsonFile(schoolDirectoryData, fileName);
+    } catch {
+
+    }
+  });
+}
+// fixObjectId('sheet1-fo-2-updated.json');
+
+// Append service and programs into features for sheet 1
+function appendServiceAndProgramsIntoFeatures(fileName){
+  fs.readFile(fileName, 'utf8', (err, data) => {
+    if (err) {
+      console.error('Error reading the input JSON file:', err);
+      return;
+    }
+
+    try {
+      let schoolDirectoryData = JSON.parse(data);
+      schoolDirectoryData.map(item => {
+        if(item.FEATURES){
+          item.FEATURES = item.FEATURES + ', ' + item.SCHOOL_SERVICES_PROGRAMS;
+        }
+        item.SCHOOL_SERVICES_PROGRAMS = '';
+      })
+
+      saveToJsonFile(schoolDirectoryData, fileName);
+    } catch {
+
+    }
+  });
+}
+// appendServiceAndProgramsIntoFeatures('sheet1-fo-2-updated.json');
