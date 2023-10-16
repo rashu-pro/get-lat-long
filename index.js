@@ -366,7 +366,7 @@ function replaceNothingWithNA(fileName){
 // replaceNothingWithNA(swapedDataJsonFileName);
 // replaceNothingWithNA(updatedJsonFileName);
 // replaceNothingWithNA('sheet1-fo-2-updated.json');
-replaceNothingWithNA('sheet1-fo-2-swaped.json');
+// replaceNothingWithNA('sheet1-fo-2-swaped.json');
 
 //Check two array to find if there's any matched entry
 function matchTwoList(sheet1, sheet2){
@@ -433,7 +433,7 @@ function duplicateItems(fileName){
       let schoolDirectoryData = JSON.parse(data);
       let itemArray = [];
       schoolDirectoryData.map(item => {
-        itemArray.push(item.LATITUDE);
+        itemArray.push(item.EMAIL_ADDRESS);
       })
       const duplicatesZipCode = findDuplicates(itemArray);
       console.log(duplicatesZipCode);
@@ -461,7 +461,7 @@ function findDuplicates(arr) {
 
   return duplicates;
 }
-// duplicateItems(updatedJsonFileName);
+// duplicateItems('full-list-to-include-in-footer.json');
 
 // fix the object id for sheet 1
 function fixObjectId(fileName){
@@ -512,3 +512,25 @@ function appendServiceAndProgramsIntoFeatures(fileName){
   });
 }
 // appendServiceAndProgramsIntoFeatures('sheet1-fo-2-updated.json');
+
+// Total count
+function totalCount(fileName){
+  fs.readFile(fileName, 'utf8', (err, data) => {
+    if (err) {
+      console.error('Error reading the input JSON file:', err);
+      return;
+    }
+
+    try {
+      let schoolDirectoryData = JSON.parse(data);
+
+      console.log('total schools: ', schoolDirectoryData.length);
+    } catch {
+
+    }
+  });
+}
+
+totalCount('exported-list-theisla.org.json');
+
+
