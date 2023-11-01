@@ -433,7 +433,7 @@ function duplicateItems(fileName){
       let schoolDirectoryData = JSON.parse(data);
       let itemArray = [];
       schoolDirectoryData.map(item => {
-        itemArray.push(item.EMAIL_ADDRESS);
+        itemArray.push(item.ID);
       })
       const duplicatesZipCode = findDuplicates(itemArray);
       console.log(duplicatesZipCode);
@@ -462,6 +462,8 @@ function findDuplicates(arr) {
   return duplicates;
 }
 // duplicateItems('full-list-to-include-in-footer.json');
+// duplicateItems('exported-list-isla.masjidsolutions.net.json');
+duplicateItems('exported-list-theisla.org-uniqueid.json');
 
 // fix the object id for sheet 1
 function fixObjectId(fileName){
@@ -531,6 +533,6 @@ function totalCount(fileName){
   });
 }
 
-totalCount('exported-list-theisla.org.json');
+// totalCount('exported-list-theisla.org.json');
 
 
