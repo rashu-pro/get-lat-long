@@ -4,7 +4,7 @@ const updatedJsonFileName = 'islamic-school-directory-data-updated.json';
 const swapedDataJsonFileName = 'islamic-school-directory-swaped-data.json';
 
 const googleMapsClient = require('@google/maps').createClient({
-  key: 'AIzaSyCRIIew-eQp2QjI5mRLFOE-qoUnl-qKC38' // Replace with your actual Google Maps API key
+  key: 'AIzaSyCRIIew-eQp2QjI5mRLFOE-qoUnl-qKC38'
 });
 
 async function getAddress(address, supportingAddressParameter, count) {
@@ -21,7 +21,7 @@ async function getAddress(address, supportingAddressParameter, count) {
 }
 
 // Function to geocode addresses and update the array
-function geocodeAddressesAndSaveToJson(data) {
+function geocodeAddressesAndSaveToJson(data, outputFilename) {
   const promises = data.map(async (school) => {
     const address = `${school["SCHOOL_ADDRESS"]}, ${school["ZIP_CODE"]}`;
 
@@ -31,13 +31,13 @@ function geocodeAddressesAndSaveToJson(data) {
     if (zipCode.length < 5) {
       zipCode = '0' + zipCode;
     }
-    const addressParameter = [zipCode, school['CITY'], school['STATE']];
+    const addressParameter = [zipCode, school['city'], school['state']];
     const response = await getAddress(school['SCHOOL_ADDRESS'], addressParameter, 0);
 
     if (response && response[0]) {
       // Update latitude and longitude in the original data
-      school["LATITUDE"] = response[0].geometry.location.lat;
-      school["LONGITUDE"] = response[0].geometry.location.lng;
+      school["latitude"] = response[0].geometry.location.lat;
+      school["longitude"] = response[0].geometry.location.lng;
       school["SCHOOL_ADDRESS"] = response[0].formatted_address.replace(/, USA$/, '');
     }
 
@@ -48,7 +48,7 @@ function geocodeAddressesAndSaveToJson(data) {
   Promise.all(promises)
     .then((updatedData) => {
       // Save the updated data to a JSON file
-      saveToJsonFile(updatedData, 'sheet1-fo-2-updated.json');
+      saveToJsonFile(updatedData, outputFilename);
     })
     .catch((error) => {
       console.error('Error:', error);
@@ -82,8 +82,8 @@ function saveToJsonFile(data, fileName) {
 }
 
 // Call the function to start geocoding and saving to JSON
-function formatTheAddress() {
-  fs.readFile('sheet1-of-2.json', 'utf8', (err, data) => {
+function formatTheAddress(inputfileName, outputFilename) {
+  fs.readFile(inputfileName, 'utf8', (err, data) => {
     if (err) {
       console.error('Error reading the input JSON file:', err);
       return;
@@ -91,13 +91,13 @@ function formatTheAddress() {
 
     try {
       const schoolDirectoryData = JSON.parse(data);
-      geocodeAddressesAndSaveToJson(schoolDirectoryData);
+      geocodeAddressesAndSaveToJson(schoolDirectoryData, outputFilename);
     } catch {
 
     }
   });
 }
-// formatTheAddress();
+formatTheAddress('weekend-islamic-school-wiserusa.json', 'islamic-school-directory-wiserusa-formatted.json');
 
 
 // Swaps grade brackets value into zip code so that I can show it into popup template into school directory
@@ -463,7 +463,7 @@ function findDuplicates(arr) {
 }
 // duplicateItems('full-list-to-include-in-footer.json');
 // duplicateItems('exported-list-isla.masjidsolutions.net.json');
-duplicateItems('exported-list-theisla.org-uniqueid.json');
+// duplicateItems('exported-list-theisla.org-uniqueid.json');
 
 // fix the object id for sheet 1
 function fixObjectId(fileName){
