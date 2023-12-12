@@ -1,3 +1,4 @@
+const Parser = require('papaparse');
 const fs = require('fs'); // Include the Node.js file system module
 
 const updatedJsonFileName = 'islamic-school-directory-data-updated.json';
@@ -97,7 +98,7 @@ function formatTheAddress(inputfileName, outputFilename) {
     }
   });
 }
-formatTheAddress('weekend-islamic-school-wiserusa.json', 'islamic-school-directory-wiserusa-formatted.json');
+// formatTheAddress('weekend-islamic-school-wiserusa.json', 'islamic-school-directory-wiserusa-formatted.json');
 
 
 // Swaps grade brackets value into zip code so that I can show it into popup template into school directory
@@ -189,15 +190,16 @@ function phoneNumberPurify(fileName) {
       let schoolDirectoryData = JSON.parse(data);
 
       schoolDirectoryData = schoolDirectoryData.map(item => {
-        const firstPhoneNumber = item.PHONE.split('\n')[0];
-        const firstEmail = item.EMAIL_ADDRESS.split('\n')[0];
-        const firstHeadOfSchool = item.HEAD_OF_SCHOOL.split('\n')[0];
+        const firstPhoneNumber = extractFirstItem(item.phone.split('\n')[0], ',');
+        const firstEmail = extractFirstItem(item.EMAIL_ADDRESS.split('\n')[0], ',');
+
+        // const firstHeadOfSchool = item.HEAD_OF_SCHOOL.split('\n')[0];
 
         return {
           ...item,
-          PHONE: firstPhoneNumber,
+          phone: firstPhoneNumber,
           EMAIL_ADDRESS: firstEmail,
-          HEAD_OF_SCHOOL: firstHeadOfSchool
+          // HEAD_OF_SCHOOL: firstHeadOfSchool
         };
       });
 
@@ -207,8 +209,7 @@ function phoneNumberPurify(fileName) {
     }
   });
 }
-// phoneNumberPurify('islamic-school-directory-data-updated.json');
-// phoneNumberPurify('islamic-school-directory-swaped-data.json');
+// phoneNumberPurify('islamic-school-directory-wiserusa-formatted.json');
 
 // Replace invalid webaddress
 function invalidWeaddress(fileName) {
@@ -285,7 +286,7 @@ function replaceSlashNWithCommaInFeatures(fileName) {
 // replaceSlashNWithCommaInFeatures('islamic-school-directory-swaped-data.json');
 
 // Replace trailing ',' from the features property from the school object
-function replacTrailingCommaFromThePropertyValue(fileName){
+function replacTrailingCommaFromThePropertyValue(fileName) {
   fs.readFile(fileName, 'utf8', (err, data) => {
     if (err) {
       console.error('Error reading the input JSON file:', err);
@@ -314,7 +315,7 @@ function replacTrailingCommaFromThePropertyValue(fileName){
 // replacTrailingCommaFromThePropertyValue(swapedDataJsonFileName);
 
 // Add N/A if theres no data available for a property of school object
-function replaceNothingWithNA(fileName){
+function replaceNothingWithNA(fileName) {
   fs.readFile(fileName, 'utf8', (err, data) => {
     if (err) {
       console.error('Error reading the input JSON file:', err);
@@ -336,23 +337,23 @@ function replaceNothingWithNA(fileName){
 
 
         // return item;
-        if(item.GRADE_BRACKETS === ''){
+        if (item.GRADE_BRACKETS === '') {
           item.GRADE_BRACKETS = "N/A";
         }
 
-        if(item.HEAD_OF_SCHOOL === ''){
+        if (item.HEAD_OF_SCHOOL === '') {
           item.HEAD_OF_SCHOOL = "N/A";
         }
 
-        if(item.TUITION_RANGE === ''){
+        if (item.TUITION_RANGE === '') {
           item.TUITION_RANGE = "N/A";
         }
 
-        if(item.HIFDH_PROGRAM === ''){
+        if (item.HIFDH_PROGRAM === '') {
           item.HIFDH_PROGRAM = "N/A";
         }
 
-        if(item.ZIP_CODE === ''){
+        if (item.ZIP_CODE === '') {
           item.ZIP_CODE = "N/A";
         }
       });
@@ -369,7 +370,7 @@ function replaceNothingWithNA(fileName){
 // replaceNothingWithNA('sheet1-fo-2-swaped.json');
 
 //Check two array to find if there's any matched entry
-function matchTwoList(sheet1, sheet2){
+function matchTwoList(sheet1, sheet2) {
   fs.readFile(sheet1, 'utf8', (err, data) => {
     if (err) {
       console.error('Error reading the input JSON file:', err);
@@ -422,7 +423,7 @@ function findMatchingItems(arr1, arr2) {
 // matchTwoList('isla-school-directory-sheet1.json', 'islamic-school-directory-data-updated.json');
 
 // Get the duplicates item
-function duplicateItems(fileName){
+function duplicateItems(fileName) {
   fs.readFile(fileName, 'utf8', (err, data) => {
     if (err) {
       console.error('Error reading the input JSON file:', err);
@@ -448,15 +449,15 @@ function findDuplicates(arr) {
   const uniqueValues = [];
 
   for (let i = 0; i < arr.length; i++) {
-      const value = arr[i];
+    const value = arr[i];
 
-      if (uniqueValues.includes(value)) {
-          if (!duplicates.includes(value)) {
-              duplicates.push(value);
-          }
-      } else {
-          uniqueValues.push(value);
+    if (uniqueValues.includes(value)) {
+      if (!duplicates.includes(value)) {
+        duplicates.push(value);
       }
+    } else {
+      uniqueValues.push(value);
+    }
   }
 
   return duplicates;
@@ -466,7 +467,7 @@ function findDuplicates(arr) {
 // duplicateItems('exported-list-theisla.org-uniqueid.json');
 
 // fix the object id for sheet 1
-function fixObjectId(fileName){
+function fixObjectId(fileName) {
   fs.readFile(fileName, 'utf8', (err, data) => {
     if (err) {
       console.error('Error reading the input JSON file:', err);
@@ -491,7 +492,7 @@ function fixObjectId(fileName){
 // fixObjectId('sheet1-fo-2-updated.json');
 
 // Append service and programs into features for sheet 1
-function appendServiceAndProgramsIntoFeatures(fileName){
+function appendServiceAndProgramsIntoFeatures(fileName) {
   fs.readFile(fileName, 'utf8', (err, data) => {
     if (err) {
       console.error('Error reading the input JSON file:', err);
@@ -501,7 +502,7 @@ function appendServiceAndProgramsIntoFeatures(fileName){
     try {
       let schoolDirectoryData = JSON.parse(data);
       schoolDirectoryData.map(item => {
-        if(item.FEATURES){
+        if (item.FEATURES) {
           item.FEATURES = item.FEATURES + ', ' + item.SCHOOL_SERVICES_PROGRAMS;
         }
         item.SCHOOL_SERVICES_PROGRAMS = '';
@@ -516,7 +517,7 @@ function appendServiceAndProgramsIntoFeatures(fileName){
 // appendServiceAndProgramsIntoFeatures('sheet1-fo-2-updated.json');
 
 // Total count
-function totalCount(fileName){
+function totalCount(fileName) {
   fs.readFile(fileName, 'utf8', (err, data) => {
     if (err) {
       console.error('Error reading the input JSON file:', err);
@@ -535,4 +536,67 @@ function totalCount(fileName){
 
 // totalCount('exported-list-theisla.org.json');
 
+function replacTrailingComma(fileName, propertyName) {
+  fs.readFile(fileName, 'utf8', (err, data) => {
+    if (err) {
+      console.error('Error reading the input JSON file:', err);
+      return;
+    }
 
+    try {
+      let schoolDirectoryData = JSON.parse(data);
+
+      // Iterate through the array and remove trailing ','
+      schoolDirectoryData = schoolDirectoryData.map(item => {
+        const currentProperty = item[propertyName].trim();
+        if (currentProperty.endsWith(',')) {
+          item[propertyName] = item[propertyName].slice(0, -1);
+        }
+        return item;
+      });
+
+      saveToJsonFile(schoolDirectoryData, fileName);
+    } catch {
+
+    }
+  });
+}
+// replacTrailingComma('islamic-school-directory-wiserusa-formatted.json','phone');
+
+function extractFirstItem(inputString, splitSign) {
+  const numbers = inputString.split(splitSign).map(item => item.trim()); // Split the string into an array
+  return numbers[0]; // Return the first element
+}
+
+
+// json to csv
+const papaParseConfig = {
+  quotes: false, //or array of booleans
+  quoteChar: '"',
+  escapeChar: '"',
+  delimiter: ",",
+  header: true,
+  newline: "\r\n",
+  skipEmptyLines: false, //other option is 'greedy', meaning skip delimiters, quotes, and whitespace.
+  columns: null //or array of strings
+}
+
+
+function readAndConvertJsonIntoCsv(inputfileName, outputFilename) {
+  fs.readFile(inputfileName, 'utf8', (err, data) => {
+    if (err) {
+      console.error('Error reading the input JSON file:', err);
+      return;
+    }
+
+    try {
+      const csvString = Parser.unparse(data, { header: true });
+      fs.promises.writeFile(outputFilename, csvString, 'utf8');
+      console.log('file converted!');
+    } catch {
+      console.log('something went wrong!');
+    }
+  });
+}
+
+readAndConvertJsonIntoCsv('islamic-school-directory-wiserusa-formatted.json', 'islamic-school-directory-data-1692683674579.csv');
