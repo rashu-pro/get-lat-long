@@ -192,6 +192,8 @@ function phoneNumberPurify(fileName) {
       schoolDirectoryData = schoolDirectoryData.map(item => {
         const firstPhoneNumber = extractFirstItem(item.phone.split('\n')[0], ',');
         const firstEmail = extractFirstItem(item.EMAIL_ADDRESS.split('\n')[0], ',');
+        const role = extractFirstItem(item.role.split('\n')[0], ',');
+        const contactPerson = extractFirstItem(item.CONTACT_PERSON.split('\n')[0], ',');
 
         // const firstHeadOfSchool = item.HEAD_OF_SCHOOL.split('\n')[0];
 
@@ -199,7 +201,8 @@ function phoneNumberPurify(fileName) {
           ...item,
           phone: firstPhoneNumber,
           EMAIL_ADDRESS: firstEmail,
-          // HEAD_OF_SCHOOL: firstHeadOfSchool
+          role: role,
+          CONTACT_PERSON: contactPerson
         };
       });
 
@@ -568,35 +571,108 @@ function extractFirstItem(inputString, splitSign) {
   return numbers[0]; // Return the first element
 }
 
+// readAndConvertJsonIntoCsv('islamic-school-directory-wiserusa-formatted.json', 'islamic-school-directory-data-1692683674579.csv');
 
-// json to csv
-const papaParseConfig = {
-  quotes: false, //or array of booleans
-  quoteChar: '"',
-  escapeChar: '"',
-  delimiter: ",",
-  header: true,
-  newline: "\r\n",
-  skipEmptyLines: false, //other option is 'greedy', meaning skip delimiters, quotes, and whitespace.
-  columns: null //or array of strings
+// Generates UUID
+function generateUUID() {
+  let uuid = '', i, random;
+  for (i = 0; i < 32; i++) {
+    random = (Math.random() * 16) | 0;
+    if (i === 8 || i === 12 || i === 16 || i === 20) {
+      uuid += '-';
+    }
+    uuid += (i === 12 ? 4 : i === 16 ? (random & 3) | 8 : random).toString(16);
+  }
+  return uuid;
 }
 
-
-function readAndConvertJsonIntoCsv(inputfileName, outputFilename) {
-  fs.readFile(inputfileName, 'utf8', (err, data) => {
+// Creates data to import into database
+function formatDataToImportIntoDatabase(inputFileName, outputFilename){
+  fs.readFile(inputFileName, 'utf8', (err, data) => {
     if (err) {
       console.error('Error reading the input JSON file:', err);
       return;
     }
 
     try {
-      const csvString = Parser.unparse(data, { header: true });
-      fs.promises.writeFile(outputFilename, csvString, 'utf8');
-      console.log('file converted!');
+      let schoolDirectoryData = JSON.parse(data);
+      let formattedData = [];
+      let counter = 1;
+      schoolDirectoryData = schoolDirectoryData.map(item => {
+        const dataObject = {
+          directory_organization_id: counter,
+          unique_id: generateUUID(),
+          name: item.SCHOOL_NAME,
+          address: item.SCHOOL_ADDRESS,
+          city: item.city,
+          state: item.state,
+          zip_code: item.ZIP_CODE,
+          country: 'United States',
+          phone: item.phone,
+          website: item.website,
+          email_primary: item.EMAIL_ADDRESS,
+          contact_person: item.CONTACT_PERSON,
+          contact_person_role: item.role,
+          latitude: item.latitude,
+          longitude: item.longitude,
+          is_imported: 1,
+          is_active: 1
+        }
+        formattedData.push(dataObject);
+        counter++;
+        return formattedData;
+      });
+
+      saveToJsonFile(formattedData, outputFilename);
     } catch {
-      console.log('something went wrong!');
+
     }
   });
 }
 
-readAndConvertJsonIntoCsv('islamic-school-directory-wiserusa-formatted.json', 'islamic-school-directory-data-1692683674579.csv');
+const inputFileName = 'islamic-school-directory-wiserusa-formatted.json';
+const outputFilename = 'islamic-school-directory-wiserusa-formatted_for_database.json';
+// formatDataToImportIntoDatabase(inputFileName, outputFilename);
+
+function formatDataToImportIntoArcgis(inputFileName, outputFilename) {
+  fs.readFile(inputFileName, 'utf8', (err, data) => {
+    if (err) {
+      console.error('Error reading the input JSON file:', err);
+      return;
+    }
+
+    try {
+      let schoolDirectoryData = JSON.parse(data);
+      let formattedData = [];
+      schoolDirectoryData = schoolDirectoryData.map(item => {
+        const dataObject = {
+          OBJECTID: item.directory_organization_id,
+          SCHOOL_NAME: item.name,
+          SCHOOL_ADDRESS: item.address,
+          city: item.city,
+          state: "California",
+          ZIP_CODE: 94583,
+          phone: "925-380-6432",
+          website: "https://srvic.org/islamic-school/",
+          CONTACT_PERSON: "Nasira Sharieff",
+          role: "",
+          EMAIL_ADDRESS: "hasiba@SRVIC.org",
+          latitude: 37.77678700000001,
+          longitude: -121.969178,
+          FID: item.directory_organization_id
+        }
+
+        formattedData.push(dataObject);
+        return formattedData;
+      });
+
+      saveToJsonFile(formattedData, outputFilename);
+    } catch {
+
+    }
+  });
+}
+
+const inputFileName2 = 'islamic-school-directory-wiserusa-formatted_for_database.json';
+const outputFilename2 = 'wiser-usa/islamic-school-directory-wiserusa-formatted_for_arcgis.json';
+formatDataToImportIntoArcgis(inputFileName2, outputFilename2);
