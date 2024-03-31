@@ -24,22 +24,22 @@ async function getAddress(address, supportingAddressParameter, count) {
 // Function to geocode addresses and update the array
 function geocodeAddressesAndSaveToJson(data, outputFilename) {
   const promises = data.map(async (school) => {
-    const address = `${school["SCHOOL_ADDRESS"]}, ${school["ZIP_CODE"]}`;
+    const address = `${school["address"]}, ${school["zip_code"]}`;
 
     // Geocode the address
     // const response = await geocodeAddress(address);
-    let zipCode = String(school['ZIP_CODE']);
+    let zipCode = String(school['zip_code']);
     if (zipCode.length < 5) {
       zipCode = '0' + zipCode;
     }
     const addressParameter = [zipCode, school['city'], school['state']];
-    const response = await getAddress(school['SCHOOL_ADDRESS'], addressParameter, 0);
+    const response = await getAddress(school['address'], addressParameter, 0);
 
     if (response && response[0]) {
       // Update latitude and longitude in the original data
       school["latitude"] = response[0].geometry.location.lat;
       school["longitude"] = response[0].geometry.location.lng;
-      school["SCHOOL_ADDRESS"] = response[0].formatted_address.replace(/, USA$/, '');
+      school["address"] = response[0].formatted_address.replace(/, USA$/, '');
     }
 
     return school;
@@ -98,7 +98,7 @@ function formatTheAddress(inputfileName, outputFilename) {
     }
   });
 }
-// formatTheAddress('weekend-islamic-school-wiserusa.json', 'islamic-school-directory-wiserusa-formatted.json');
+// formatTheAddress('wiser-usa/new/weekend-school-in-USA-updated.json', 'wiser-usa/new/weekend-school-in-USA-updated.json');
 
 
 // Swaps grade brackets value into zip code so that I can show it into popup template into school directory
@@ -384,7 +384,7 @@ function matchTwoList(sheet1, sheet2) {
       let schoolDirectoryDataSheet1 = JSON.parse(data);
       let sheet1NameList = [];
       schoolDirectoryDataSheet1.map(item => {
-        sheet1NameList.push(item.SCHOOL_NAME);
+        sheet1NameList.push(item.latitude);
       })
       // console.log(sheet1NameList);
 
@@ -398,15 +398,22 @@ function matchTwoList(sheet1, sheet2) {
           let schoolDirectoryDataSheet2 = JSON.parse(data);
           let sheet2NameList = [];
           schoolDirectoryDataSheet2.map(item => {
-            sheet2NameList.push(item.SCHOOL_NAME);
+            sheet2NameList.push(item.latitude);
           })
 
           let matchedItem = findMatchingItems(sheet1NameList, sheet2NameList);
+          console.log('total matched item: ', matchedItem.length);
           console.log(matchedItem);
 
-
-
           // saveToJsonFile(schoolDirectoryData, fileName);
+
+          /*
+          // remove the matched item from the new list
+          const filteredArray = schoolDirectoryDataSheet2.filter(obj => !matchedItem.includes(obj.latitude));
+          console.log('total item: ', filteredArray.length);
+          saveToJsonFile(filteredArray, 'wiser-usa/new/list-without-existing.json');
+          */
+
         } catch {
 
         }
@@ -423,7 +430,7 @@ function matchTwoList(sheet1, sheet2) {
 function findMatchingItems(arr1, arr2) {
   return arr1.filter(item => arr2.includes(item));
 }
-// matchTwoList('isla-school-directory-sheet1.json', 'islamic-school-directory-data-updated.json');
+// matchTwoList('wiser-usa/new/weekend-school-in-USA-updated.json', 'wiser-usa/database/islamic-school-directory-wiserusa-formatted_for_database.json');
 
 // Get the duplicates item
 function duplicateItems(fileName) {
@@ -587,7 +594,7 @@ function generateUUID() {
 }
 
 // Creates data to import into database
-function formatDataToImportIntoDatabase(inputFileName, outputFilename){
+function formatDataToImportIntoDatabase(inputFileName, outputFilename) {
   fs.readFile(inputFileName, 'utf8', (err, data) => {
     if (err) {
       console.error('Error reading the input JSON file:', err);
@@ -599,22 +606,36 @@ function formatDataToImportIntoDatabase(inputFileName, outputFilename){
       let formattedData = [];
       let counter = 1;
       schoolDirectoryData = schoolDirectoryData.map(item => {
+        // Replace null word with '' value
+        for (const key in item) {
+          if (item.hasOwnProperty(key)) {
+            // Check if the property is empty and replace it with null
+            if (item[key] === 'null') {
+              item[key] = '';
+            }
+          }
+        }
+
+        const uniqueId = generateUUID();
+
         const dataObject = {
           directory_organization_id: counter,
-          unique_id: generateUUID(),
-          name: item.SCHOOL_NAME,
-          address: item.SCHOOL_ADDRESS,
+          unique_id: uniqueId,
+          user_id: 2,
+          name: item.name,
+          address: item.address,
           city: item.city,
           state: item.state,
-          zip_code: item.ZIP_CODE,
-          country: 'United States',
+          zip_code: item.zip_code,
+          country: item.country,
           phone: item.phone,
           website: item.website,
-          email_primary: item.EMAIL_ADDRESS,
-          contact_person: item.CONTACT_PERSON,
-          contact_person_role: item.role,
+          email_primary: item.email_primary,
+          contact_person: item.contact_person,
+          contact_person_role: item.contact_person_role,
           latitude: item.latitude,
           longitude: item.longitude,
+          map_object_id: item.map_object_id,
           is_imported: 1,
           is_active: 1
         }
@@ -630,9 +651,9 @@ function formatDataToImportIntoDatabase(inputFileName, outputFilename){
   });
 }
 
-const inputFileName = 'islamic-school-directory-wiserusa-formatted.json';
-const outputFilename = 'islamic-school-directory-wiserusa-formatted_for_database.json';
-// formatDataToImportIntoDatabase(inputFileName, outputFilename);
+const inputFileName = 'wiser-usa/new/list-combined-database.json';
+const outputFilename = 'wiser-usa/new/list-combined-database.json';
+formatDataToImportIntoDatabase(inputFileName, outputFilename);
 
 function formatDataToImportIntoArcgis(inputFileName, outputFilename) {
   fs.readFile(inputFileName, 'utf8', (err, data) => {
@@ -646,20 +667,18 @@ function formatDataToImportIntoArcgis(inputFileName, outputFilename) {
       let formattedData = [];
       schoolDirectoryData = schoolDirectoryData.map(item => {
         const dataObject = {
-          OBJECTID: item.directory_organization_id,
           SCHOOL_NAME: item.name,
           SCHOOL_ADDRESS: item.address,
           city: item.city,
-          state: "California",
-          ZIP_CODE: 94583,
-          phone: "925-380-6432",
-          website: "https://srvic.org/islamic-school/",
-          CONTACT_PERSON: "Nasira Sharieff",
-          role: "",
-          EMAIL_ADDRESS: "hasiba@SRVIC.org",
-          latitude: 37.77678700000001,
-          longitude: -121.969178,
-          FID: item.directory_organization_id
+          state: item.state,
+          ZIP_CODE: item.zip_code,
+          phone: item.phone,
+          website: item.website,
+          CONTACT_PERSON: item.contact_person,
+          role: item.contact_person_role,
+          EMAIL_ADDRESS: item.email_primary,
+          latitude: item.latitude,
+          longitude: item.longitude
         }
 
         formattedData.push(dataObject);
@@ -673,6 +692,41 @@ function formatDataToImportIntoArcgis(inputFileName, outputFilename) {
   });
 }
 
-const inputFileName2 = 'islamic-school-directory-wiserusa-formatted_for_database.json';
-const outputFilename2 = 'wiser-usa/islamic-school-directory-wiserusa-formatted_for_arcgis.json';
-formatDataToImportIntoArcgis(inputFileName2, outputFilename2);
+const inputFileName2 = 'wiser-usa/new/list-combined-database.json';
+const outputFilename2 = 'wiser-usa/new/list-combined-arcgis.json';
+// formatDataToImportIntoArcgis(inputFileName2, outputFilename2);
+
+const outputFileNameDatase = 'wiser-usa/database/islamic-school-directory-wiserusa-formatted_for_database.json';
+// replaceEmptyValueNull(inputFileName2, outputFileNameDatase);
+
+function replaceEmptyValueNull(inputFileName, outputFilename) {
+  fs.readFile(inputFileName, 'utf8', (err, data) => {
+    if (err) {
+      console.error('Error reading the input JSON file:', err);
+      return;
+    }
+
+    try {
+      let schoolDirectoryData = JSON.parse(data);
+      let formattedData = [];
+      schoolDirectoryData = schoolDirectoryData.map(item => {
+        // Iterate through the properties of each object
+        for (const key in item) {
+          if (item.hasOwnProperty(key)) {
+            // Check if the property is empty and replace it with null
+            if (!item[key]) {
+              item[key] = 'null';
+            }
+          }
+        }
+        return item;
+      });
+
+      // console.log(schoolDirectoryData);
+
+      saveToJsonFile(schoolDirectoryData, outputFilename);
+    } catch {
+
+    }
+  });
+}

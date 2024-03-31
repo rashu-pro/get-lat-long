@@ -31,6 +31,6 @@ function readAndConvertJsonIntoCsv(inputfileName, outputFilename) {
     });
 }
 
-const inputFileName = 'wiser-usa/islamic-school-directory-wiserusa-formatted_for_arcgis.json';
-const outputFilename = 'wiser-usa/islamic-school-directory-wiserusa-formatted_for_arcgis.csv';
-readAndConvertJsonIntoCsv(inputFileName, outputFilename);
+const inputFileName = 'wiser-usa/new/list-combined-database.json';
+const outputFileName = 'wiser-usa/new/list-combined-database.csv';
+readAndConvertJsonIntoCsv(inputFileName, outputFileName);
